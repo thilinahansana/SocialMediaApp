@@ -33,12 +33,13 @@ import { TiTick } from "react-icons/ti";
 import { IoClose } from "react-icons/io5";
 import { FaRegShareFromSquare } from "react-icons/fa6";
 
-import { BiChat, BiLike, BiShare } from "react-icons/bi";
+import { BiChat, BiLike, BiPlusCircle, BiShare } from "react-icons/bi";
 import WorkoutProfileUpdateModal from "../../Components/Workout/WorkoutProfileUpdateModal";
 import { TbActivityHeartbeat } from "react-icons/tb";
 import { useParams } from "react-router-dom";
 import WorkoutProfileSaveModal from "../../Components/Workout/WorkoutProfileSaveModal";
 import axios from "axios";
+import CreateWorkoutStatus from "../../Components/Workout/CreateWorkoutStatus";
 
 const WorkoutStatus = () => {
   const { username } = useParams();
@@ -52,10 +53,22 @@ const WorkoutStatus = () => {
     onOpen: onUpdateOpen,
     onClose: onUpdateClose,
   } = useDisclosure();
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onClose: onCreateClose,
+  } = useDisclosure();
+
   const [height, setHeight] = useState();
   const [weight, setWeight] = useState();
   const [bmi, setBmi] = useState();
   const [calories, setCalories] = useState();
+  const [workouts, setWorkouts] = useState([]);
+  const [workoutGoals, setWorkoutGoals] = useState([]);
+  const [runstatus, setRunstatus] = useState(false);
+  const [weightstatus, setWeightstatus] = useState(false);
+  const [yogastatus, setYogastatus] = useState(false);
+  const [swimstatus, setSwimstatus] = useState(false);
 
   const handleUpdate = () => {
     onUpdateOpen();
@@ -63,6 +76,10 @@ const WorkoutStatus = () => {
 
   const handleSave = () => {
     onSaveOpen();
+  };
+
+  const handleCreate = () => {
+    onCreateOpen();
   };
 
   const handleHeight = (e) => {
@@ -79,19 +96,131 @@ const WorkoutStatus = () => {
   };
   const Id = localStorage.getItem("workoutProfileId");
   useEffect(() => {
-    axios
-      .get(`http://localhost:8080/api/workoutprofile/${Id}`)
-      .then((response) => {
+    const fetchWorkoutProfile = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/workoutprofile/${Id}`
+        );
         // Update state with the fetched data
         setHeight(response.data.height);
         setWeight(response.data.weight);
         setBmi(response.data.bmi);
         setCalories(response.data.calories);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching workout profile:", error);
+      }
+    };
+
+    // Fetch workout profile immediately
+    fetchWorkoutProfile();
+
+    // Set interval to fetch workout profile every 5 seconds
+    const interval = setInterval(fetchWorkoutProfile, 1000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
+
+  const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch workout data
+        const workoutResponse = await axios.get(
+          `http://localhost:8080/api/workouts/${userId}`
+        );
+        setWorkouts(workoutResponse.data);
+
+        // Fetch workout goal data
+        const workoutGoalResponse = await axios.get(
+          `http://localhost:8080/api/workout-goals/${userId}/daily`
+        );
+        setWorkoutGoals(workoutGoalResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [userId]);
+
+  const compareData = () => {
+    if (workouts.length > 0 && workoutGoals.length > 0) {
+      const result = workouts.map((workout) => {
+        const relevantGoal = workoutGoals.find(
+          (goal) => goal.startDate === workout.date
+        );
+        console.log("Relevant Goal:", relevantGoal);
+        console.log("Workout:", workout.date);
+
+        if (relevantGoal) {
+          if (workout.name === "Running") {
+            setRunstatus(true);
+            return workout.distance >= relevantGoal.distance;
+          } else if (workout.name === "Weight Lifting") {
+            setWeightstatus(true);
+            return workout.target >= relevantGoal.target;
+          }
+          if (workout.name === "Yoga") {
+            setYogastatus(true);
+            return workout.target >= relevantGoal.target;
+          }
+          if (workout.name === "Swimming") {
+            setSwimstatus(true);
+            return workout.target >= relevantGoal.target;
+          }
+        }
+        return null;
       });
-  }, []); // Add an empty array as the second argument to run the effect only once on mount
+      console.log("Result:", result);
+      return result;
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    const comparisonResult = compareData();
+    console.log("Comparison Result:", comparisonResult);
+  }, [workouts, workoutGoals]);
+
+  const renderTableRows = () => {
+    const data = compareData();
+    console.log("Data:", data);
+    return data.map((item, index) => {
+      if (item) {
+        return (
+          <Tr key={index}>
+            <Td>
+              <div className="flex">
+                {item.name === "Running" && <FaRunning className="text-xl" />}
+                {item.name === "Weight Lifting" && (
+                  <GiWeightLiftingUp className="text-xl" />
+                )}
+                {item.name === "Yoga" && <GrYoga className="text-xl" />}
+                <h2 className="ml-2 font-semibold">{item.name}</h2>
+              </div>
+            </Td>
+            <Td>
+              {item.goalDistance} <span>(km)</span>
+            </Td>
+            <Td>
+              {item.distance} <span>(km)</span>
+            </Td>
+            <Td>
+              {item.distanceCondition && item.targetCondition ? (
+                <TiTick className="font-bold text-green-600 text-xl" />
+              ) : (
+                <IoClose className="font-bold text-red-600 text-xl" />
+              )}
+            </Td>
+          </Tr>
+        );
+      } else {
+        return null;
+      }
+    });
+  };
 
   return (
     <div>
@@ -114,8 +243,7 @@ const WorkoutStatus = () => {
                 />
 
                 <Box>
-                  <Heading size="sm">Segun Adebayo</Heading>
-                  <Text>Creator, Chakra UI</Text>
+                  <Heading size="sm">Thilina Hansana</Heading>
                 </Box>
               </Flex>
               <IconButton
@@ -183,6 +311,10 @@ const WorkoutStatus = () => {
               <h1 className="text-2xl m-4 font-semibold z-10">
                 Workout Status
               </h1>
+              <BiPlusCircle
+                className="text-4xl text-white cursor-pointer z-50"
+                onClick={handleCreate}
+              />
               <hr />
             </div>
 
@@ -209,73 +341,7 @@ const WorkoutStatus = () => {
                             <Th>Status</Th>
                           </Tr>
                         </Thead>
-                        <Tbody>
-                          <Tr>
-                            <Td>
-                              <div className="flex">
-                                <FaRunning className="text-xl" />
-                                <h2 className="ml-2 font-semibold">Running</h2>
-                              </div>
-                            </Td>
-                            <Td>
-                              10 <span>(km)</span>
-                            </Td>
-                            <Td>
-                              {" "}
-                              12 <span>(km)</span>
-                            </Td>
-                            <Td>
-                              <TiTick className="font-bold text-green-600 text-xl" />
-                            </Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <div className="flex">
-                                <GiWeightLiftingUp className="text-xl" />
-                                <h2 className="ml-2 font-semibold">
-                                  Weight Lifting
-                                </h2>
-                              </div>
-                            </Td>
-                            <Td>
-                              <Flex justify="space-between">
-                                <Text>10 Reps</Text>
-                              </Flex>
-                              <Flex justify="space-between">
-                                <Text>Using 3 Sets</Text>
-                              </Flex>
-                            </Td>
-                            <Td>
-                              <Flex justify="space-between">
-                                <Text>8 Reps</Text>
-                              </Flex>
-                              <Flex justify="space-between">
-                                <Text>Using 3 Sets</Text>
-                              </Flex>
-                            </Td>
-
-                            <Td>
-                              <IoClose className="font-bold text-red-600 text-xl" />
-                            </Td>
-                          </Tr>
-                          <Tr>
-                            <Td>
-                              <div className="flex">
-                                <GrYoga className="text-xl" />
-                                <h2 className="ml-2 font-semibold">Yoga</h2>
-                              </div>
-                            </Td>
-                            <Td>
-                              <Text>1 Hour</Text>
-                            </Td>
-                            <Td>
-                              <Text>1 Hour</Text>
-                            </Td>
-                            <Td>
-                              <TiTick className="font-bold text-green-600 text-xl" />
-                            </Td>
-                          </Tr>
-                        </Tbody>
+                        <Tbody>{renderTableRows()}</Tbody>
                       </Table>
                       <div className="float-end m-4 text-2xl cursor-pointer">
                         <FaRegShareFromSquare className="text-blue-500" />
@@ -297,6 +363,10 @@ const WorkoutStatus = () => {
       <WorkoutProfileSaveModal
         isSaveOpen={isSaveOpen}
         onSaveClose={onSaveClose}
+      />
+      <CreateWorkoutStatus
+        isCreateOpen={isCreateOpen}
+        onCreateClose={onCreateClose}
       />
     </div>
   );

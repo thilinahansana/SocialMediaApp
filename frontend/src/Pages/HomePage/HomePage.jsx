@@ -20,6 +20,10 @@ export const HomePage = () => {
       }
     };
     fetchActivities();
+
+    setInterval(() => {
+      fetchActivities();
+    }, 1000);
   }, []);
 
   return (
@@ -35,7 +39,7 @@ export const HomePage = () => {
             {activities.map((item) => (
               <PostCard
                 key={item._id}
-                Id={item._id}
+                Id={item.id}
                 description={item.description}
                 date={item.date}
                 type={item.type}

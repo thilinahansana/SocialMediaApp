@@ -21,6 +21,7 @@ import {
 import { BsPlusCircleFill, BsThreeDotsVertical } from "react-icons/bs";
 import WorkoutGoalCreateModal from "../../Components/Workout/WorkoutGoalCreateModal";
 import { FaDeleteLeft } from "react-icons/fa6";
+import { GoGoal } from "react-icons/go";
 
 const WorkoutGoals = () => {
   const {
@@ -68,6 +69,18 @@ const WorkoutGoals = () => {
     setEndDate(event.target.value);
   };
 
+  const handleDelete = async (goalId) => {
+    console.log(`Deleting goal with id ${goalId}`);
+    try {
+      await axios.delete(`http://localhost:8080/api/workout-goals/${goalId}`);
+      fetchGoalsByType(selectedType);
+      console.log(`Goal with id ${goalId} deleted`);
+    } catch (error) {
+      console.error(`Error deleting goal:`, error);
+      // You can add code here to provide feedback to the user about the error
+    }
+  };
+
   return (
     <div>
       <div>
@@ -82,7 +95,7 @@ const WorkoutGoals = () => {
           <div className="flex items-center space-x-2">
             <h1 className="text-2xl m-4 font-semibold">My Goals</h1>
             <BsPlusCircleFill
-              className="text-2xl text-blue-400"
+              className="text-4xl text-white z-50"
               onClick={handleClick}
             />
           </div>
@@ -142,14 +155,13 @@ const WorkoutGoals = () => {
                   return (
                     <Card key={goalIndex} mb={4}>
                       <CardBody>
-                        <FaDeleteLeft className="text-red-500 text-4xl float-end cursor-pointer" />
+                        <FaDeleteLeft
+                          className="text-red-500 text-4xl float-end cursor-pointer"
+                          onClick={() => handleDelete(goal.id)}
+                        />
                         <div className="flex">
                           <div className="mr-4">
-                            <img
-                              src="https://images.healthshots.com/healthshots/en/uploads/2022/03/20121414/fitness-woman-1600x900.jpg"
-                              alt=""
-                              className="w-20 h-20"
-                            />
+                            <GoGoal className="relative top-5 text-4xl" />
                           </div>
                           <Table size="" variant="">
                             <Thead>
@@ -164,7 +176,20 @@ const WorkoutGoals = () => {
                                 (activity, activityIndex) => (
                                   <Tr key={activityIndex}>
                                     <Td width="25%">{activity.name}</Td>
-                                    <Td width="25%">{activity.sets}</Td>
+                                    {activity.name == "Running" && (
+                                      <Td width="25%">-</Td>
+                                    )}
+                                    {activity.name == "Weight Lifting" && (
+                                      <Td width="25%">
+                                        {activity.sets} <span>Sets</span>
+                                      </Td>
+                                    )}
+                                    {activity.name == "Yoga" && (
+                                      <Td width="25%">-</Td>
+                                    )}
+                                    {activity.name == "Swimming" && (
+                                      <Td width="25%">-</Td>
+                                    )}
                                     <Td width="25%">
                                       {activity.target}{" "}
                                       <span>{activity.unit}</span>

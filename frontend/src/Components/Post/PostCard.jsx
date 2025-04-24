@@ -58,6 +58,14 @@ const PostCard = ({ activities, date, description, type, Id }) => {
     onOpen();
   };
 
+  const handleDelete = (Id) => {
+    axios
+      .delete(`http://localhost:8080/api/last-workout-posts/${Id}`)
+      .then((response) => {
+        console.log("Deleted post");
+      });
+  };
+
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(`1970-01-01T${startTime}`);
     const end = new Date(`1970-01-01T${endTime}`);
@@ -86,7 +94,10 @@ const PostCard = ({ activities, date, description, type, Id }) => {
               <BsThreeDots className="dots" onClick={handleClick} />
               <div className="dropdown-content">
                 {showDropdown && (
-                  <p className="bg-black text-white py-1 px-4 rounded-md cursor-pointer">
+                  <p
+                    className="bg-black text-white py-1 px-4 rounded-md cursor-pointer"
+                    onClick={handleDelete(Id)}
+                  >
                     Delete
                   </p>
                 )}
