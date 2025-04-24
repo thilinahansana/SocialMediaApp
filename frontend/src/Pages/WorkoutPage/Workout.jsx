@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import { FaRunning, FaSwimmer } from "react-icons/fa";
 import { GiWeightLiftingUp } from "react-icons/gi";
 import { GrYoga } from "react-icons/gr";
@@ -25,13 +24,45 @@ import { TiTick } from "react-icons/ti";
 import { FaDeleteLeft, FaRegShareFromSquare } from "react-icons/fa6";
 import { TbActivityHeartbeat } from "react-icons/tb";
 import axios from "axios";
+import LastWorkoutPostModal from "../../Components/Workout/LastWorkoutShareModal";
+
 const Workout = () => {
   const [activities, setActivities] = useState([]);
   const [workoutDetails, setWorkoutDetails] = useState([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isWorkoutOpen,
+    onOpen: onWorkoutCreateOpen,
+    onClose: onWorkoutCreateClose,
+  } = useDisclosure();
 
-  const handleClick = () => {
-    onOpen();
+  const {
+    isOpen: isPostOpen,
+    onOpen: onPostOpen,
+    onClose: onPostClose,
+  } = useDisclosure();
+
+  const handleCreateClick = () => {
+    onWorkoutCreateOpen();
+  };
+
+  const handlePostClick = () => {
+    onPostOpen();
+  };
+
+  const handleDeleteClick = (workoutId) => {
+    return () => {
+      console.log("Deleting workout with ID:", workoutId);
+      axios
+        .delete(`http://localhost:8080/api/workouts/${workoutId}`)
+        .then((response) => {
+          console.log("Workout deleted successfully");
+          // Optionally, you can update the state or perform any other actions after successful deletion
+        })
+        .catch((error) => {
+          console.error("Error deleting workout:", error);
+          // Handle error if deletion fails
+        });
+    };
   };
 
   const userId = localStorage.getItem("userId");
@@ -43,13 +74,12 @@ const Workout = () => {
           `http://localhost:8080/api/workouts/${userId}`
         );
         if (response.data.length > 0) {
-          // Sort activities by date in descending order
           const sortedActivities = response.data.sort(
             (a, b) => new Date(b.date) - new Date(a.date)
           );
           setActivities(sortedActivities[0].activities);
+          console.log("Workout details:", activities);
           setWorkoutDetails(response.data);
-          // Set last added workout details
         }
       } catch (error) {
         console.error("Error fetching workout details:", error);
@@ -57,6 +87,9 @@ const Workout = () => {
     };
 
     fetchWorkoutDetails();
+    const interval = setInterval(fetchWorkoutDetails, 5000);
+
+    return () => clearInterval(interval);
   }, [userId]);
 
   const calculateDuration = (startTime, endTime) => {
@@ -93,7 +126,7 @@ const Workout = () => {
                     </div>
                     <div>
                       <AiFillPlusCircle
-                        onClick={handleClick}
+                        onClick={handleCreateClick}
                         className="text-4xl mr-4 z-10"
                       />
                     </div>
@@ -175,7 +208,7 @@ const Workout = () => {
                       </Tbody>
                     </Table>
                     <div className="float-end m-4 text-2xl cursor-pointer">
-                      <FaRegShareFromSquare />
+                      <FaRegShareFromSquare onClick={handlePostClick} />
                     </div>
                   </div>
                   <Text></Text>
@@ -199,7 +232,10 @@ const Workout = () => {
                         <h2 className="font-bold">Date: </h2>
                         <p>{new Date(workout.date).toDateString()}</p>
                       </div>
-                      <FaDeleteLeft className="text-2xl text-red-500" />
+                      <FaDeleteLeft
+                        className="text-2xl text-red-500 cursor-pointer"
+                        onClick={handleDeleteClick(workout.id)}
+                      />
                     </div>
                     <Table variant="simple" size="sm">
                       <Thead>
@@ -210,7 +246,7 @@ const Workout = () => {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {activities.map((activity, index) => (
+                        {workout.activities.map((activity, index) => (
                           <Tr key={index}>
                             <Td>
                               {activity.name === "Running" && (
@@ -281,7 +317,15 @@ const Workout = () => {
         </div>
       </div>
 
-      <WorkoutCreateModal onClose={onClose} isOpen={isOpen} />
+      <WorkoutCreateModal
+        onClose={onWorkoutCreateClose}
+        isOpen={isWorkoutOpen}
+      />
+      <LastWorkoutPostModal
+        isOpen={isPostOpen}
+        onClose={onPostClose}
+        lastWorkout={workoutDetails[0]}
+      />
     </div>
   );
 };

@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import axios from "axios"; // Import Axios for making HTTP requests
 import {
   Button,
   Card,
@@ -11,34 +9,32 @@ import {
   ModalOverlay,
   Stack,
   Table,
-  TableCaption,
   TableContainer,
   Tbody,
   Td,
   Th,
   Thead,
   Tr,
-  Select,
 } from "@chakra-ui/react";
-
+import React from "react";
 import { FaRunning, FaSwimmer } from "react-icons/fa";
 import { GiWeightLiftingUp } from "react-icons/gi";
 import { GrYoga } from "react-icons/gr";
 import { MdOutlineRemoveCircleOutline } from "react-icons/md";
 
-const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
-  const [activities, setActivities] = useState([]);
-  const [availableActivities, setAvailableActivities] = useState([
+const CreateWorkoutStatus = ({ onClose, isOpen }) => {
+  const [activities, setActivities] = React.useState([]);
+  const [availableActivities, setAvailableActivities] = React.useState([
     { name: "Running", desc: "-", unit: "km" },
     { name: "Weight Lifting", desc: "Sets", unit: "Reps" },
     { name: "Yoga", desc: "-", unit: "Hour" },
     { name: "Swimming", desc: "-", unit: "Hour" },
   ]);
-  const [goalType, setGoalType] = useState("daily");
-  const [startDate, setStartDate] = useState(
+  const [goalType, setGoalType] = React.useState("daily");
+  const [startDate, setStartDate] = React.useState(
     new Date().toISOString().split("T")[0]
   );
-  const [endDate, setEndDate] = useState(
+  const [endDate, setEndDate] = React.useState(
     new Date().toISOString().split("T")[0]
   );
 
@@ -74,26 +70,8 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
     setEndDate(event.target.value);
   };
 
-  const userId = localStorage.getItem("userId");
-
-  const saveWorkoutGoal = async () => {
-    try {
-      const response = await axios.post(
-        `http://localhost:8080/api/workout-goals/${userId}`,
-        {
-          type: goalType,
-          startDate,
-          endDate,
-          activities,
-        }
-      );
-      console.log(response.data);
-      onClose();
-      // Log the response data if needed
-      // Optionally, you can reset the state or close the modal after successful save
-    } catch (error) {
-      console.error("Error saving workout goal:", error);
-    }
+  const saveWorkoutGoal = () => {
+    console.log(activities);
   };
 
   return (
@@ -103,17 +81,8 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
         <ModalContent>
           <ModalBody>
             <div>
-              <h1 className="text-2xl font-semibold mb-4">Create Goal</h1>
+              <h1 className="text-2xl font-semibold mb-4">Create Status</h1>
               <div className="flex mb-4">
-                <Select
-                  value={goalType}
-                  onChange={handleGoalTypeChange}
-                  className="mr-4"
-                >
-                  <option value="daily">Daily Goal</option>
-                  <option value="weekly">Weekly Goal</option>
-                  <option value="monthly">Monthly Goal</option>
-                </Select>
                 <Input
                   type="date"
                   value={startDate}
@@ -146,8 +115,8 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
                           <Thead>
                             <Tr>
                               <Th>Name</Th>
-                              <Th>Descrption</Th>
-                              <Th>Target</Th>
+                              <Th>Goal</Th>
+                              <Th>Archievment</Th>
                               <Th>Action</Th>
                             </Tr>
                           </Thead>
@@ -175,28 +144,60 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
                                 <Td>
                                   <div className="flex">
                                     {activity.name === "Running" && (
-                                      <span>{activity.desc}</span>
+                                      <div>
+                                        <Input
+                                          style={{ width: "4rem" }}
+                                          className="mr-2"
+                                          name="goal"
+                                          value={activity.goal}
+                                          onChange={(e) =>
+                                            handleInputChange(index, e)
+                                          }
+                                        />
+                                        <span>{activity.unit}</span>
+                                      </div>
                                     )}
                                     {activity.name === "Weight Lifting" && (
                                       <div>
                                         <Input
                                           style={{ width: "4rem" }}
                                           className="mr-2"
-                                          type="number"
-                                          name="sets"
-                                          value={activity.sets}
+                                          name="archievment"
+                                          value={activity.archievment}
                                           onChange={(e) =>
                                             handleInputChange(index, e)
                                           }
                                         />
-                                        <span>{activity.desc}</span>
+                                        <span>{activity.unit}</span>
                                       </div>
                                     )}
                                     {activity.name === "Yoga" && (
-                                      <span>{activity.desc}</span>
+                                      <div>
+                                        <Input
+                                          style={{ width: "4rem" }}
+                                          className="mr-2"
+                                          name="archievment"
+                                          value={activity.archievment}
+                                          onChange={(e) =>
+                                            handleInputChange(index, e)
+                                          }
+                                        />
+                                        <span>{activity.unit}</span>
+                                      </div>
                                     )}
                                     {activity.name === "Swimming" && (
-                                      <span>{activity.desc}</span>
+                                      <div>
+                                        <Input
+                                          style={{ width: "4rem" }}
+                                          className="mr-2"
+                                          name="archievment"
+                                          value={activity.archievment}
+                                          onChange={(e) =>
+                                            handleInputChange(index, e)
+                                          }
+                                        />
+                                        <span>{activity.unit}</span>
+                                      </div>
                                     )}
                                   </div>
                                 </Td>
@@ -204,7 +205,6 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
                                   <Input
                                     style={{ width: "4rem" }}
                                     className="mr-2"
-                                    type="number"
                                     name="target"
                                     value={activity.target}
                                     onChange={(e) =>
@@ -251,4 +251,4 @@ const WorkoutGoalCreateModal = ({ onClose, isOpen }) => {
   );
 };
 
-export default WorkoutGoalCreateModal;
+export default CreateWorkoutStatus;

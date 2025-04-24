@@ -132,6 +132,7 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                               <>
                                 <Input
                                   size="md"
+                                  type="number"
                                   name="distance"
                                   placeholder="Distance"
                                   value={activity.distance || ""}
@@ -177,6 +178,7 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                               <>
                                 <Input
                                   size="md"
+                                  type="number"
                                   name="weight"
                                   placeholder="Weight"
                                   value={activity.weight || ""}
@@ -191,6 +193,7 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                                 <Input
                                   size="md"
                                   name="reps"
+                                  type="number"
                                   placeholder="Reps"
                                   value={activity.reps || ""}
                                   onChange={(e) =>
@@ -204,6 +207,7 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                                 <Input
                                   size="md"
                                   name="sets"
+                                  type="number"
                                   placeholder="Sets"
                                   value={activity.sets || ""}
                                   onChange={(e) =>
@@ -288,12 +292,12 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                   </div>
                 </div>
               </div>
-              <div className="float-end mt-4">
+              <div className="float-end mt-4 space-x-4">
                 {!activities.find(
                   (activity) => activity.name === "Running"
                 ) && (
                   <Button onClick={() => addActivity({ name: "Running" })}>
-                    Add Running
+                    Running
                   </Button>
                 )}
                 {!activities.find(
@@ -302,19 +306,19 @@ const WorkoutCreateModal = ({ onClose, isOpen }) => {
                   <Button
                     onClick={() => addActivity({ name: "Weight Lifting" })}
                   >
-                    Add Weight Lifting
+                    Weight Lifting
                   </Button>
                 )}
                 {!activities.find((activity) => activity.name === "Yoga") && (
                   <Button onClick={() => addActivity({ name: "Yoga" })}>
-                    Add Yoga
+                    Yoga
                   </Button>
                 )}
                 {!activities.find(
                   (activity) => activity.name === "Swimming"
                 ) && (
                   <Button onClick={() => addActivity({ name: "Swimming" })}>
-                    Add Swimming
+                    Swimming
                   </Button>
                 )}
                 <Button onClick={saveWorkout}>Save</Button>
